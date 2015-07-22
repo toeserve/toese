@@ -1,0 +1,27 @@
+<html>
+
+<head><title>PLEX Parsing</title></head>
+<body>
+<h1>The PLEX Lexing/Parsing Engine</h1>
+<br><br>Copyright (c) 2015 David Jackson. All rights reserved.
+
+<p>The PLEX parsing engine is a cloning, parallelized parsing and lexing engine that is used for parsing languages. </p>
+
+<p>Each clone is run in parallel, being executed once per character of input. Each clone contains a stack, 
+and a token list. The frame at the top of the stack is executed when a clone is run. The stack frames contain subroutines.
+
+<p>The stack is used for subroutine/rule nesting. A subroutine may push another subroutine onto a stack. This is especially the case where the subroutine is an execution list subroutine.A subroutine at the top of the stack may also pop itself off the stack when it has finished. It can also return a fail state when it does so. A subroutine/rule may also make a clone from the present clone. 
+
+<p>Usually, OR subroutines will create a clone for each nested code block, which are its arguments. This will result in a copy being made of much of the clone state, including the stack and the token list. The OR subroutine in most cases permenantly deactivates the parent clone, since the child thenceforth will run independantly and usually the parent is never returned to. The nested OR code blocks are then pushed onto the stack in each child clone, after the OR's own call frame is popped off the stack in the child clones. This causes the child clone, as the child clone runs,  to return to the list level where the OR was called from rather than the OR itself, since the child clone will run independantly of the parent thenceforth, provided the child's rules on its stack do not return fail states. Child clones are registered with the parser so that they will be run in parallel with all other clones for each character of input. 
+
+<p>Clones are deleted if a subroutine on the top of its stack returns a negative return result. Since the clones are being run in parellel, clones that have a subroutine/rule that does not match incoming character string are weeded out and deleted. In the OR scenario where there are several different rule sets that need to be tried on incoming input string, each is run in parellel as a seperate clone and fed one character at a time. Often in an OR rule, only one of the rules is expected to match incoming character string, only the ones which have rules that match the incoming character string are kept active. Usually, only child nodes at the edge of the family tree are kept and run, since parent clones are usually disposed when children clones are created from them. 
+
+<p>Only one character of input string needs to be kept in memory at a time as a result of this. There is no reading backward to the input string, returning to earlier sections of the input string already passed, or looking ahead into the input string. 
+
+<p>Unless the incoming grammar is highly ambiguous, there should be not that many clones running at a single time. Usually, when clones are made from a parent clone, the parent clone is deleted. Each child clone recieves a copy of the cloned call stack from the parent. When the child node reaches the level of the call stack where it was created by the parent, it continues running and does not merge back with the parent. Instead, it will continue running down to the lowest frame of the call stack individually and will continue running seperately from the parent, never merging with the parent. A clone is also deleted when one of its rules/subroutines fails, by failing to match incoming character string.
+
+<p>The program that the engine directly run consists of subroutine refs contained within data structures. The engine is initialized by the initial subroutine that should be the first to run being pushed onto the stack of the root clone. This is usually a list subroutine that contains a code block containing rules. This is the root of a tree-like structure that is the entire "program" that will be run. 
+
+<p>This "program" can be written directly in data structures, or using constructor subroutines, or be generated from a EBNF compiler provided.
+
+</body></html>
